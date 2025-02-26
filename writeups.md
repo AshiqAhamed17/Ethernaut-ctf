@@ -47,6 +47,7 @@ forge script script/ChallengeSolution.s.sol --rpc-url $INFURA_URL --broadcast
 -	If successful, your contract should be hacked or manipulated as required.
 
 ---
+---
 
 # Challenges
 
@@ -84,6 +85,7 @@ contract Level0Solution is Script {
 }
 ```
 
+---
 ---
 
 ## 1. Fallback
@@ -131,6 +133,7 @@ contract FallbackSolution is Script {
 }
 ```
 
+---
 ---
 ## 2. Fallout
 
@@ -183,3 +186,45 @@ contract FalloutSolution is Script {
 
 Now that the exploit script is ready, we can execute from our terminal the following command: `forge script script/FalloutSolution.s.sol --rpc-url $INFURA_URL --broadcast`
 
+---
+
+### **Ethernaut Fallout Challenge - Easy Console Method**
+
+### **📌 Solving via Console**
+There is an **easier way** to solve this challenge directly from the **console**.
+
+---
+
+**1️⃣ Open Console & Get the Instance**
+First, open the **console** and retrieve the contract instance.
+
+You can check the **player's address** by running:
+```javascript
+player
+'0xa8CFB5E2DF0C1B5232227a0bD15E745c7Acc5585'
+```
+
+And importantly the command `contract.abi` gives all the available function for this contract.
+
+2️⃣ To see all available functions, use:
+![contract.abi image](assets/img.png)
+
+3️⃣ Exploit the Faulty Constructor
+
+The contract has a misnamed constructor (Fal1out instead of Fallout).
+Since Solidity only recognizes constructors if they match the contract name exactly, Fal1out() is treated as a regular public function.
+don't forget to use the keyword `await` as the function returns a promise.
+
+You can call it using:
+
+```javascript
+await contract.Fal1out()
+```
+
+![contract.Fal1out image](assets/fallout-img2.png)
+
+Once the transaction is confirmed, submit the instance to complete the challenge!
+
+![Well done image](assets/fallout-img3.png)
+
+---
