@@ -365,3 +365,16 @@ forge script script/CoinFlipSolution.s.sol --rpc-url $INFURA_URL --broadcast
 
 ### Once the transaction is confirmed, submit the instance to complete the challenge!
 ![Well done img](assets/coinflip-2.png)
+
+---
+---
+
+## 4. Telephone
+
+
+
+Resources:
+https://hackernoon.com/how-to-solve-the-ethernaut-games-level-4-telephone
+https://hackernoon.com/hacking-solidity-contracts-using-txorigin-for-authorization-are-vulnerable-to-phishing
+https://www.youtube.com/watch?v=mk4wDlVB4ro&t=291s&pp=ygUQdHgub3JpZ2luIGF0dGFjaw%3D%3D
+
