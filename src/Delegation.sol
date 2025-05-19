@@ -8,6 +8,7 @@ contract Delegate {
         owner = _owner;
     }
 
+    // Can be called to get owner.
     function pwn() public {
         owner = msg.sender;
     }
@@ -23,9 +24,12 @@ contract Delegation {
     }
 
     fallback() external {
+        //msg.data should be the encoded function of pwn function() =>  0xdd365b8b
+        // (bool result,) = address(delegate).delegatecall(abi.encodeWithSignature(arg));
         (bool result,) = address(delegate).delegatecall(msg.data);
         if (result) {
             this;
         }
     }
+
 }
